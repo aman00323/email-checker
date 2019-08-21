@@ -116,6 +116,7 @@ class EmailChecker
     {
         if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
             // Get the domain of the email recipient
+            $detailsDesc = '';
             $email_arr = explode('@', $email);
             $domain = array_slice($email_arr, -1);
             $domain = $domain[0];
@@ -162,15 +163,15 @@ class EmailChecker
                         // Send the HELO command to the SMTP server
                         fputs($connect, "HELLO $mx_ip\r\n");
                         $out = fgets($connect, 1024);
-                        $details .= $out . "\n";
+                        $detailsDesc .= $out . "\n";
                         // Send an SMTP Mail command from the sender's email address
                         fputs($connect, "MAIL FROM: <$fromemail>\r\n");
                         $from = fgets($connect, 1024);
-                        $details .= $from . "\n";
+                        $detailsDesc .= $from . "\n";
                         // Send the SCPT command with the recepient's email address
                         fputs($connect, "RCPT TO: <$email>\r\n");
                         $to = fgets($connect, 1024);
-                        $details .= $to . "\n";
+                        $detailsDesc .= $to . "\n";
                         // Close the socket connection with QUIT command to the SMTP server
                         fputs($connect, 'QUIT');
                         fclose($connect);
