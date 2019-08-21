@@ -1,1 +1,1 @@
-# email-verifier
+# Email Verifier
