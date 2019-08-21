@@ -10,7 +10,7 @@ class EmailChecker
 
     public $result = '';
     //Require email address to send request for testing.
-    public $from = 'example@example.com';
+    public $fromemail = 'example@example.com';
     /*
     ==============================================================
 
@@ -165,7 +165,7 @@ class EmailChecker
                         $out = fgets($connect, 1024);
                         $detailsDesc .= $out . "\n";
                         // Send an SMTP Mail command from the sender's email address
-                        fputs($connect, "MAIL FROM: <$from>\r\n");
+                        fputs($connect, "MAIL FROM: <$fromemail>\r\n");
                         $from = fgets($connect, 1024);
                         $detailsDesc .= $from . "\n";
                         // Send the SCPT command with the recepient's email address
