@@ -1,0 +1,34 @@
+{
+    "name": "aman/emailchecker",
+    "description": "Laravel package for checking email address is exist or not in real world",
+    "require": {
+        "guzzlehttp/guzzle": "^6.3",
+        "php": ">=7.0.0"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "autoload": {
+        "psr-4": {
+            "Aman\\EmailVerifier\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Aman\\EmailVerifier\\EmailCheckerServiceProvider"
+            ],
+            "aliases": {
+                "ApiHelper": "Aman\\EmailVerifier\\EmailCheckerFacade"
+            }
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Aman\\EmailVerifier\\Tests\\": "tests"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^7.0|^8.0",
+        "orchestra/testbench": "~3.6.0|~3.7.0|~3.8.0"
+    }
+}
