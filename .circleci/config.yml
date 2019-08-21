@@ -13,7 +13,7 @@ commands:
             - checkout
             - run: echo 'export APP_ENV="test"' >> $BASH_ENV
             - run: composer require "laravel/framework=5.8.*" --prefer-source --no-interaction --no-suggest
-            - run: composer update << parameters.composer_flags >> --no-interaction --prefer-source
+            - run: composer update nothing
             - run: ./vendor/bin/phpunit
 
 workflows:

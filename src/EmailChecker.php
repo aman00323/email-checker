@@ -9,8 +9,7 @@ class EmailChecker
     public $details;
 
     public $result = '';
-    //Require email address to send request for testing.
-    public $fromemail = 'example@example.com';
+
     /*
     ==============================================================
 
