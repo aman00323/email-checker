@@ -4,11 +4,13 @@ namespace Aman\EmailVerifier;
 
 class EmailChecker
 {
+    public $domian;
 
-    public $domian = '';
+    public $details;
 
+    public $result = '';
     //Require email address to send request for testing.
-    public $from = 'aman@improwised.com';
+    public $from = 'example@example.com';
     /*
     ==============================================================
 
@@ -20,13 +22,19 @@ class EmailChecker
      */
     public function checkEmail($email)
     {
-        if (!empty($email) && filter_var($email, FILTER_VALIDATE_EMAIL) === true) {
-            $response = array();
+        $disposable = $mxrecord = $domain = array();
+
+        if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
             // check for disposable email
-            if ($this->checkDisposableEmail($email) === false) {
+            if ($this->checkDisposableEmail($email) === true) {
                 return [
                     'success' => false,
                     'error' => 'Entered email address is disposable',
+                ];
+            } else {
+                $disposable = [
+                    'success' => true,
+                    'detail' => 'Email address is not disposable',
                 ];
             }
             $verify = $this->checkMxAndDnsRecord($email);
@@ -35,14 +43,29 @@ class EmailChecker
                     'success' => false,
                     'error' => 'Entered email address has no MX and DNS record.',
                 ];
+            } else {
+                $mxrecord = [
+                    'success' => true,
+                    'detail' => $verify[1],
+                ];
             }
             if ($this->checkDomain($email) === false) {
                 return [
                     'success' => false,
                     'error' => 'Unable to verify email address.',
                 ];
+            } else {
+                $domain = [
+                    'success' => true,
+                    'detail' => 'Domain is exist.',
+                ];
             }
-            return true;
+            return [
+                'success' => true,
+                'dispossable' => $disposable,
+                'mxrecord' => $mxrecord,
+                'domain' => $domain,
+            ];
         } else {
             return [
                 'success' => false,
@@ -70,9 +93,9 @@ class EmailChecker
             Trasmail|Guerrillamail|Yopmail|boximail|ghacks|Maildrop|MintEmail|fixmail|gelitik.in|ag.us.to|mobi.web.id
             |fansworldwide.de|privymail.de|gishpuppy|spamevader|uroid|tempmail|soodo|deadaddress|trbvm)/i", $domain)) // Possiblities of domain name that can genrate dispossable emails COURTESY FORMGET
             {
-                return false;
-            } else {
                 return true;
+            } else {
+                return false;
             }
         } else {
             return false;
@@ -112,7 +135,6 @@ class EmailChecker
                 // If no IP assigned, get the MX records for the host name
                 getmxrr($domain, $mxhosts, $mxweight);
             }
-
             if (!empty($mxhosts)) {
                 $mx_ip = $mxhosts[array_search(min($mxweight), $mxhosts)];
             } else {
@@ -128,50 +150,54 @@ class EmailChecker
                 } else {
                     // Exit the program if no MX records are found for the domain host
                     $result = 'invalid';
-                    $details .= 'No suitable MX records found.';
-                    return ((true == $getdetails) ? array($result, $details) : $result);
+                    $details = 'No suitable MX records found.';
+                    return array($result, $details);
                 }
             }
-
             // Open a socket connection with the hostname, smtp port 25
-            $connect = @fsockopen($mx_ip, 25);
-            if ($connect) {
-                // Initiate the Mail Sending SMTP transaction
-                if (preg_match('/^220/i', $out = fgets($connect, 1024))) {
-                    // Send the HELO command to the SMTP server
-                    fputs($connect, "HELO $mx_ip\r\n");
-                    $out = fgets($connect, 1024);
-                    $details .= $out . "\n";
-                    // Send an SMTP Mail command from the sender's email address
-                    fputs($connect, "MAIL FROM: <$fromemail>\r\n");
-                    $from = fgets($connect, 1024);
-                    $details .= $from . "\n";
-                    // Send the SCPT command with the recepient's email address
-                    fputs($connect, "RCPT TO: <$email>\r\n");
-                    $to = fgets($connect, 1024);
-                    $details .= $to . "\n";
-                    // Close the socket connection with QUIT command to the SMTP server
-                    fputs($connect, 'QUIT');
-                    fclose($connect);
-                    // The expected response is 250 if the email is valid
-                    if (!preg_match('/^250/i', $from) || !preg_match('/^250/i', $to)) {
-                        $result = 'invalid';
+            try {
+                if ($connect = @fsockopen($mx_ip, 25, $errno, $errstr, 5)) {
+                    // Initiate the Mail Sending SMTP transaction
+                    if (preg_match('/^220/i', $out = fgets($connect, 1024))) {
+                        // Send the HELO command to the SMTP server
+                        fputs($connect, "HELLO $mx_ip\r\n");
+                        $out = fgets($connect, 1024);
+                        $details .= $out . "\n";
+                        // Send an SMTP Mail command from the sender's email address
+                        fputs($connect, "MAIL FROM: <$fromemail>\r\n");
+                        $from = fgets($connect, 1024);
+                        $details .= $from . "\n";
+                        // Send the SCPT command with the recepient's email address
+                        fputs($connect, "RCPT TO: <$email>\r\n");
+                        $to = fgets($connect, 1024);
+                        $details .= $to . "\n";
+                        // Close the socket connection with QUIT command to the SMTP server
+                        fputs($connect, 'QUIT');
+                        fclose($connect);
+                        // The expected response is 250 if the email is valid
+                        if (!preg_match('/^250/i', $from) || !preg_match('/^250/i', $to)) {
+                            $result = 'invalid';
+                            $details = 'Invalid email address';
+                        } else {
+                            $result = 'valid';
+                            $details = 'Valid email address';
+                        }
                     } else {
                         $result = 'valid';
+                        $details = 'MX record found but could not connect to server';
                     }
+                } else {
+                    $result = 'valid';
+                    $details = 'MX record found but could not connect to server';
                 }
-            } else {
-                $result = 'invalid';
-                $details .= 'Could not connect to server';
+            } catch (Exception $e) {
+                $result = 'valid';
+                $details = 'MX record found but could not connect to server';
             }
-            if ($getdetails) {
-                return array($result, $details);
-            } else {
-                return $result;
-            }
+            return array($result, $details);
         } else {
             $result = 'invalid';
-            $details .= 'Validation error email address.';
+            $details = 'Validation error email address.';
             return array($result, $details);
         }
     }
@@ -191,13 +217,11 @@ class EmailChecker
     {
         if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $domain = 'http://' . $this->splitEmail($email);
-            $init = curl_init($domain);
-            curl_setopt($init, CURLOPT_TIMEOUT, 5);
-            curl_setopt($init, CURLOPT_CONNECTTIMEOUT, 5);
-            curl_setopt($init, CURLOPT_RETURNTRANSFER, true);
-            $data = curl_exec($init);
-            $httpcode = curl_getinfo($init, CURLINFO_HTTP_CODE);
-            curl_close($init);
+            $httpcode = $this->goCurl($domain);
+            if ($httpcode === 301) {
+                $domain = 'https://' . $this->splitEmail($email);
+                $httpcode = $this->goCurl($domain);
+            }
             if ($httpcode >= 200 && $httpcode < 300) {
                 return true;
             } else {
@@ -220,5 +244,17 @@ class EmailChecker
     private function splitEmail($email)
     {
         return substr(strrchr($email, "@"), 1);
+    }
+
+    private function goCurl($domain)
+    {
+        $init = curl_init($domain);
+        curl_setopt($init, CURLOPT_TIMEOUT, 5);
+        curl_setopt($init, CURLOPT_CONNECTTIMEOUT, 5);
+        curl_setopt($init, CURLOPT_RETURNTRANSFER, true);
+        curl_exec($init);
+        $httpcode = curl_getinfo($init, CURLINFO_HTTP_CODE);
+        curl_close($init);
+        return $httpcode;
     }
 }
