@@ -252,6 +252,8 @@ class EmailChecker
         curl_setopt($init, CURLOPT_TIMEOUT, 5);
         curl_setopt($init, CURLOPT_CONNECTTIMEOUT, 5);
         curl_setopt($init, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($init, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($init, CURLOPT_MAXREDIRS, 3);
         curl_exec($init);
         $httpcode = curl_getinfo($init, CURLINFO_HTTP_CODE);
         curl_close($init);
