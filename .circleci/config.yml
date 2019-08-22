@@ -12,8 +12,7 @@ commands:
         steps:
             - checkout
             - run: echo 'export APP_ENV="test"' >> $BASH_ENV
-            - run: composer require "laravel/framework=5.8.*" --prefer-source --no-interaction --no-suggest
-            - run: composer update nothing
+            - run: composer install
             - run: ./vendor/bin/phpunit
 
 workflows:

@@ -30,9 +30,7 @@ class EmailCheckerTest extends TestCase
         $emailList = $this->emailList();
         for ($i = 0; $i < count($emailList); $i++) {
             $response = $emailChecker->checkMxAndDnsRecord($emailList[$i]);
-            var_dump($response,$emailList[$i]);
-
-            //self::assertEquals($response[0], 'valid');
+            self::assertEquals($response[0], 'valid');
         }
 
     }
@@ -71,8 +69,6 @@ class EmailCheckerTest extends TestCase
     {
         //Some email address with the valid domain
         return array(
-            'aman@improwised.com',
-            'jakehowlet@gmail.com',
             'temp@yahoo.com',
             'something@outlook.com',
             'anything@yahoo.com',
