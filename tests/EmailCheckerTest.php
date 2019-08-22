@@ -71,8 +71,8 @@ class EmailCheckerTest extends TestCase
     {
         //Some email address with the valid domain
         return array(
-            'anything@gmail.com',
-            'something@gmail.com',
+            'amannurani@improwised.com',
+            'jakehowlet@gmail.com',
             'temp@yahoo.com',
             'something@outlook.com',
             'anything@yahoo.com',
