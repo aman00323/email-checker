@@ -30,6 +30,7 @@ class EmailCheckerTest extends TestCase
         $emailList = $this->emailList();
         for ($i = 0; $i < count($emailList); $i++) {
             $response = $emailChecker->checkMxAndDnsRecord($emailList[$i]);
+            var_dump($response);
             self::assertEquals($response[0], 'valid');
         }
 
