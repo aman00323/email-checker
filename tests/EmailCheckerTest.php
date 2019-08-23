@@ -23,6 +23,17 @@ class EmailCheckerTest extends TestCase
         }
     }
 
+    public function testCheckDomain()
+    {
+        $emailChecker = new EmailChecker();
+        $emailList = $this->emailList();
+        for ($i = 0; $i < count($emailList); $i++) {
+            $response = $emailChecker->checkDomain($emailList[$i]);
+            self::assertTrue($response);
+        }
+
+    }
+
     public function testCheckEmail()
     {
         $emailChecker = new EmailChecker();
@@ -31,7 +42,6 @@ class EmailCheckerTest extends TestCase
             $response = $emailChecker->checkEmail($emailList[$i]);
             self::assertTrue($response['success']);
             self::assertTrue($response['dispossable']['success']);
-            self::assertTrue($response['mxrecord']['success']);
             self::assertTrue($response['domain']['success']);
         }
         $dispossibleEmail = $this->disposableEmailList();
