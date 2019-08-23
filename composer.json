@@ -1,8 +1,7 @@
 {
-    "name": "aman/emailchecker",
+    "name": "aman00323/emailchecker",
     "description": "Laravel package for checking email address is exist or not in real world",
     "require": {
-        "guzzlehttp/guzzle": "^6.3",
         "php": ">=7.0.0"
     },
     "minimum-stability": "stable",

@@ -23,14 +23,13 @@ class EmailCheckerTest extends TestCase
         }
     }
 
-    public function testCheckMxAndDnsRecord()
+    public function testCheckDomain()
     {
-        //This test takes time due to fsockopen()
         $emailChecker = new EmailChecker();
         $emailList = $this->emailList();
         for ($i = 0; $i < count($emailList); $i++) {
-            $response = $emailChecker->checkMxAndDnsRecord($emailList[$i]);
-            self::assertEquals($response[0], 'valid');
+            $response = $emailChecker->checkDomain($emailList[$i]);
+            self::assertTrue($response);
         }
 
     }
@@ -38,14 +37,6 @@ class EmailCheckerTest extends TestCase
     public function testCheckEmail()
     {
         $emailChecker = new EmailChecker();
-        $emailList = $this->emailList();
-        for ($i = 0; $i < count($emailList); $i++) {
-            $response = $emailChecker->checkEmail($emailList[$i]);
-            self::assertTrue($response['success']);
-            self::assertTrue($response['dispossable']['success']);
-            self::assertTrue($response['mxrecord']['success']);
-            self::assertTrue($response['domain']['success']);
-        }
         $dispossibleEmail = $this->disposableEmailList();
         for ($i = 0; $i < count($dispossibleEmail); $i++) {
             $response = $emailChecker->checkEmail($dispossibleEmail[$i]);
@@ -69,8 +60,6 @@ class EmailCheckerTest extends TestCase
     {
         //Some email address with the valid domain
         return array(
-            'anything@gmail.com',
-            'something@gmail.com',
             'temp@yahoo.com',
             'something@outlook.com',
             'anything@yahoo.com',
