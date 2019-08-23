@@ -37,13 +37,6 @@ class EmailCheckerTest extends TestCase
     public function testCheckEmail()
     {
         $emailChecker = new EmailChecker();
-        $emailList = $this->emailList();
-        for ($i = 0; $i < count($emailList); $i++) {
-            $response = $emailChecker->checkEmail($emailList[$i]);
-            self::assertTrue($response['success']);
-            self::assertTrue($response['dispossable']['success']);
-            self::assertTrue($response['domain']['success']);
-        }
         $dispossibleEmail = $this->disposableEmailList();
         for ($i = 0; $i < count($dispossibleEmail); $i++) {
             $response = $emailChecker->checkEmail($dispossibleEmail[$i]);
