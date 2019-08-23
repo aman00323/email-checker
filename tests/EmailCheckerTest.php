@@ -31,7 +31,6 @@ class EmailCheckerTest extends TestCase
             $response = $emailChecker->checkDomain($emailList[$i]);
             self::assertTrue($response);
         }
-
     }
 
     public function testCheckEmail()
@@ -47,23 +46,22 @@ class EmailCheckerTest extends TestCase
     private function disposableEmailList()
     {
         //TODO : add list support for dispossable emails
-        return array(
+        return [
             'df@mailinator.com',
             'df@spamevader.com',
             'temp@tempmail.com',
             'something@trbvm.com',
             'anything@boximail.com',
-        );
+        ];
     }
 
     private function emailList()
     {
         //Some email address with the valid domain
-        return array(
+        return [
             'temp@yahoo.com',
             'something@outlook.com',
             'anything@yahoo.com',
-        );
+        ];
     }
-
 }

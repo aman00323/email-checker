@@ -13,8 +13,8 @@ class EmailCheckerServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->bind('emailchecker', function() {
-            return new EmailChecker;
+        $this->app->bind('emailchecker', function () {
+            return new EmailChecker();
         });
     }
 
@@ -25,10 +25,9 @@ class EmailCheckerServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-
     }
 
-     /**
+    /**
      * Get the services provided by the provider.
      *
      * @return array
