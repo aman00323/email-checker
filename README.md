@@ -68,6 +68,10 @@ app(EmailChecker::class)->checkEmail('something@example.com'));
 
 All are different method you can use individually as per your requirement. To call all of the method at once use **Check Email**
 
+## Future Developement
+
+Planning to add more disposable email list in next release.
+
 ## Contribution
 
 All contributer are appreciated, Code must follow [PSR2](https://www.php-fig.org/psr/psr-2/). create feature branch to compare with email checker. Your code must pass testcases.
