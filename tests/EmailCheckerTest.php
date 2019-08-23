@@ -23,15 +23,13 @@ class EmailCheckerTest extends TestCase
         }
     }
 
-    public function testCheckMxAndDnsRecord()
+    public function testCheckDomain()
     {
-        //This test takes time due to fsockopen()
         $emailChecker = new EmailChecker();
         $emailList = $this->emailList();
         for ($i = 0; $i < count($emailList); $i++) {
-            $response = $emailChecker->checkMxAndDnsRecord($emailList[$i]);
-            var_dump($emailList[$i],$response);
-            //self::assertEquals($response[0], 'valid');
+            $response = $emailChecker->checkDomain($emailList[$i]);
+            self::assertTrue($response);
         }
 
     }

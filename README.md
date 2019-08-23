@@ -1,1 +1,77 @@
-# Email Verifier
+# Email Checker
+
+Email Checker was created and maintained by [Aman Nurani](https://github.com/aman00323). It provides a powerful email validating system for both development and production for Laravel. It uses [fsockopen()](https://www.php.net/manual/en/function.fsockopen.php), [cURL](https://www.php.net/manual/en/book.curl.php) and many more to validate email address exists or not in real world.
+
+Nowadays most of websites are using registration process where they need to verify user's ownership. Mostly developers verify email by sending email verification link to the email, So this will store extra email in database (if they were not exists in real). Additionally some people use [disposable emails](https://en.wikipedia.org/wiki/Disposable_email_address) for temporary usage.
+
+<center> THIS PACKAGE WILL HELP YOU TO VERIFY EMAIL </center>
+
+## Installation
+
+Laravel Exceptions requires [PHP](https://php.net) > 7.0. This particular version supports with latest [Laravel](https://laravel.com/).
+
+To get the latest version, simply require the project using [Composer](https://getcomposer.org):
+
+```bash
+$ composer require aman00323/emailchecker
+```
+
+Once installed, You need to include `Aman\EmailVerifier\EmailChecker` to access methods for email verify.
+
+## Usage
+
+#### Check Disposable Emails
+
+If you want to check email is [disposable emails](https://en.wikipedia.org/wiki/Disposable_email_address) or not then you can use the following function of [emailchecker](https://github.com/aman00323/email-verifier/)
+
+```
+app(EmailChecker::class)->checkDisposableEmail('something@example.com'));
+```
+
+This email verification will be done on the basis of [disposable emails](https://en.wikipedia.org/wiki/Disposable_email_address) list, This function will check if entered email address is in the list of disposable or not.
+
+#### Check DNS And MX Records
+
+Another usage is to check [DNS](https://en.wikipedia.org/wiki/Domain_Name_System) and [MX Record](https://en.wikipedia.org/wiki/MX_record) of the email address, In this method package will try to extract records from email address and try to verify using [SMTP](https://en.wikipedia.org/wiki/Simple_Mail_Transfer_Protocol).
+
+If this method will successfully extract records, then it will try to send HELLO message on the email address using [fsockopen()](https://www.php.net/manual/en/function.fsockopen.php), if it get valid status from MAIL server then it will return true. Also function will return true if it is not verify with the detail message.
+
+```
+app(EmailChecker::class)->checkMxAndDnsRecord('something@example.com'));
+```
+This will return array with success and details, Details will indicate email verified with any exception or not.
+
+For better output your server needs to support [fsockopen()](https://www.php.net/manual/en/function.fsockopen.php).
+
+#### Check Domain Status
+
+Sometime it is hard to identify that email exist or not based on DNS and MX Records, So this method will check the domain status using [cURL](https://www.php.net/manual/en/book.curl.php).
+
+This method ensures that email which is given has valid domain.
+
+```
+app(EmailChecker::class)->checkDomain('something@example.com'));
+```
+
+This method will return TRUE or FALSE, if it successfully get response then it will return TRUE. Response validates based on [HTTP Status Code](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes).
+
+#### Check Email
+
+This method will use all of the methods and it gives detail response, if it gives TRUE.
+
+If any of the method will respond with FALSE then will not give detail report.
+
+```
+app(EmailChecker::class)->checkEmail('something@example.com'));
+```
+    
+
+All are different method you can use individually as per your requirement. To call all of the method at once use **Check Email**
+
+## Contribution
+
+All contributer are appreciated, Code must follow [PSR2](https://www.php-fig.org/psr/psr-2/). create feature branch to compare with email checker. Your code must pass testcases.
+
+**NOTE** : This package will not ensure to verify each and email address, some of them cannot be verify due to MAIL server securities.
+
+
