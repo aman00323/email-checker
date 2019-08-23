@@ -23,17 +23,6 @@ class EmailCheckerTest extends TestCase
         }
     }
 
-    public function testCheckDomain()
-    {
-        $emailChecker = new EmailChecker();
-        $emailList = $this->emailList();
-        for ($i = 0; $i < count($emailList); $i++) {
-            $response = $emailChecker->checkDomain($emailList[$i]);
-            self::assertTrue($response);
-        }
-
-    }
-
     public function testCheckEmail()
     {
         $emailChecker = new EmailChecker();
