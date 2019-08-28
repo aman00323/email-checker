@@ -1,4 +1,5 @@
-# Email Checker
+# Email Checker [![MadeWithLaravel.com shield](https://madewithlaravel.com/storage/repo-shields/1689-shield.svg)](https://madewithlaravel.com/p/email-checker/shield-link)
+
 
 Email Checker was created and maintained by [Aman Nurani](https://github.com/aman00323). It provides a powerful email validating system for both development and production for Laravel. It uses [fsockopen()](https://www.php.net/manual/en/function.fsockopen.php), [cURL](https://www.php.net/manual/en/book.curl.php) and many more to validate email address exists or not in real world.
 
