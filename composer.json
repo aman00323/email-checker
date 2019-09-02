@@ -4,6 +4,7 @@
     "require": {
         "php": ">=7.0.0"
     },
+    "license": "MIT",
     "minimum-stability": "stable",
     "prefer-stable": true,
     "autoload": {
@@ -17,7 +18,7 @@
                 "Aman\\EmailVerifier\\EmailCheckerServiceProvider"
             ],
             "aliases": {
-                "ApiHelper": "Aman\\EmailVerifier\\EmailCheckerFacade"
+                "EmailChecker": "Aman\\EmailVerifier\\EmailCheckerFacade"
             }
         }
     },
