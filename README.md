@@ -9,7 +9,7 @@ Nowadays most of websites are using registration process where they need to veri
 
 ## Installation
 
-Laravel Exceptions requires [PHP](https://php.net) > 7.0. This particular version supports with latest [Laravel](https://laravel.com/).
+Email Checker requires [PHP](https://php.net) > 7.0. This particular version supports with latest [Laravel](https://laravel.com/).
 
 To get the latest version, simply require the project using [Composer](https://getcomposer.org):
 
