@@ -2,6 +2,8 @@
 
 namespace Aman\EmailVerifier;
 
+use Aman\EmailVerifier\Helpers\Helper;
+
 class EmailChecker
 {
     public $domian;
@@ -19,13 +21,13 @@ class EmailChecker
 
     @return array
      */
-    public function checkEmail($email)
+    public function checkEmail($email, $deepCheck = false)
     {
         $disposable = $mxrecord = $domain = array();
 
         if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
             // check for disposable email
-            if ($this->checkDisposableEmail($email) === true) {
+            if ($this->checkDisposableEmail($email, $deepCheck) === true) {
                 return [
                     'success' => false,
                     'error' => 'Entered email address is disposable',
@@ -82,7 +84,7 @@ class EmailChecker
 
     @return true | false
      */
-    public function checkDisposableEmail($email)
+    public function checkDisposableEmail($email, $deepCheck = false)
     {
         if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $domain = $this->splitEmail($email);
@@ -93,6 +95,10 @@ class EmailChecker
             |fansworldwide.de|privymail.de|gishpuppy|spamevader|uroid|tempmail|soodo|deadaddress|trbvm)/i", $domain)) // Possiblities of domain name that can genrate dispossable emails COURTESY FORMGET
             {
                 return true;
+            }
+
+            if ($deepCheck) {
+                return Helper::deepCheck($domain);
             } else {
                 return false;
             }

@@ -1,10 +1,26 @@
 {
     "name": "aman00323/emailchecker",
     "description": "Laravel package for checking email address is exist or not in real world",
+    "keywords": [
+        "email validation",
+        "disposable email checker",
+        "php email verifier",
+        "email exist or not",
+        "disposable emails",
+        "email verification"
+    ],
+    "homepage": "https://github.com/aman00323/email-checker",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Aman Nurani",
+            "email": "work.amannurani@gmail.com",
+            "role": "Software Engineer"
+        }
+    ],
     "require": {
         "php": ">=7.0.0"
     },
-    "license": "MIT",
     "minimum-stability": "stable",
     "prefer-stable": true,
     "autoload": {
