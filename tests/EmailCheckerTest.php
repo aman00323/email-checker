@@ -12,7 +12,7 @@ class EmailCheckerTest extends TestCase
         $dispossibleEmail = $this->disposableEmailList();
         for ($i = 0; $i < count($dispossibleEmail); $i++) {
             self::assertTrue(
-                $emailChecker->checkDisposableEmail($dispossibleEmail[$i])
+                $emailChecker->checkDisposableEmail($dispossibleEmail[$i], true)
             );
         }
         $emailList = $this->emailList();
@@ -28,7 +28,7 @@ class EmailCheckerTest extends TestCase
         $emailChecker = new EmailChecker();
         $emailList = $this->emailList();
         for ($i = 0; $i < count($emailList); $i++) {
-            $response = $emailChecker->checkDomain($emailList[$i]);
+            $response = $emailChecker->checkDomain($emailList[$i], false);
             self::assertTrue($response);
         }
 

@@ -21,17 +21,23 @@ Once installed, You need to include `Aman\EmailVerifier\EmailChecker` to access 
 
 ## Usage
 
-#### Check Disposable Emails
+### Check Disposable Emails
 
 If you want to check email is [disposable emails](https://en.wikipedia.org/wiki/Disposable_email_address) or not then you can use the following function of [emailchecker](https://github.com/aman00323/email-verifier/)
 
+***Added new option to check disposable emails***
+
+This option is part of checkDisposableEmail() method, you need to pass second argument as true.
+
+When you pass true inside helper will check emails with list of dispossable. which are hosted on gist, So whenever list will be changed you would't have to update package.
+
 ```
-app(EmailChecker::class)->checkDisposableEmail('something@example.com'));
+app(EmailChecker::class)->checkDisposableEmail('something@example.com','boolean'));
 ```
 
 This email verification will be done on the basis of [disposable emails](https://en.wikipedia.org/wiki/Disposable_email_address) list, This function will check if entered email address is in the list of disposable or not.
 
-#### Check DNS And MX Records
+### Check DNS And MX Records
 
 Another usage is to check [DNS](https://en.wikipedia.org/wiki/Domain_Name_System) and [MX Record](https://en.wikipedia.org/wiki/MX_record) of the email address, In this method package will try to extract records from email address and try to verify using [SMTP](https://en.wikipedia.org/wiki/Simple_Mail_Transfer_Protocol).
 
@@ -44,7 +50,7 @@ This will return array with success and details, Details will indicate email ver
 
 For better output your server needs to support [fsockopen()](https://www.php.net/manual/en/function.fsockopen.php).
 
-#### Check Domain Status
+### Check Domain Status
 
 Sometime it is hard to identify that email exist or not based on DNS and MX Records, So this method will check the domain status using [cURL](https://www.php.net/manual/en/book.curl.php).
 
@@ -56,26 +62,29 @@ app(EmailChecker::class)->checkDomain('something@example.com'));
 
 This method will return TRUE or FALSE, if it successfully get response then it will return TRUE. Response validates based on [HTTP Status Code](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes).
 
-#### Check Email
+### Check Email
 
 This method will use all of the methods and it gives detail response, if it gives TRUE.
 
 If any of the method will respond with FALSE then will not give detail report.
 
 ```
-app(EmailChecker::class)->checkEmail('something@example.com'));
+app(EmailChecker::class)->checkEmail('something@example.com','boolean'));
 ```
-    
+
+As we have added new option with checkDisposableEmail() which has second argument that will enable deep check to compare domain with large list.
+
+Don't worry it would't take too much time. :)
 
 All are different method you can use individually as per your requirement. To call all of the method at once use **Check Email**
 
 ## Future Developement
 
-Planning to add more disposable email list in next release.
+Please let add your ideas to improve this package.
 
 ## Contribution
 
-All contributer are appreciated, Code must follow [PSR2](https://www.php-fig.org/psr/psr-2/). create feature branch to compare with email checker. Your code must pass testcases.
+All contributer are welcome, Code must follow [PSR2](https://www.php-fig.org/psr/psr-2/). create feature branch to compare with email checker. Your code must pass testcases.
 
 **NOTE** : This package will not ensure to verify each and email address, some of them cannot be verify due to MAIL server securities.
 
