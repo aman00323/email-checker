@@ -166,7 +166,7 @@ class EmailChecker
                     // Initiate the Mail Sending SMTP transaction
                     if (preg_match('/^220/i', $out = fgets($connect, 1024))) {
                         // Send the HELO command to the SMTP server
-                        fputs($connect, "HELLO $mx_ip\r\n");
+                        fputs($connect, "HELO $mx_ip\r\n");
                         $out = fgets($connect, 1024);
                         $detailsDesc .= $out . "\n";
                         // Send an SMTP Mail command from the sender's email address
