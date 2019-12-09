@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.1.0
+- Update some character list inside helper.
+- New domains added to disposable domain list, Now we have 25K domains list.
+
 ## 2.0.0
 - Helper added to enhance checking of dispossable emails.
 - Added deep check option in checkDisposableEmail() method.
