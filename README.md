@@ -1,10 +1,13 @@
-# Email Checker [![MadeWithLaravel.com shield](https://madewithlaravel.com/storage/repo-shields/1689-shield.svg)](https://madewithlaravel.com/p/email-checker/shield-link)
+# Email Checker
+
+[![MadeWithLaravel.com shield](https://madewithlaravel.com/storage/repo-shields/1689-shield.svg)](https://madewithlaravel.com/p/email-checker/shield-link) [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/aman00323/StrapDown.js/graphs/commit-activity) [![GitHub license](https://img.shields.io/github/license/aman00323/email-checker)](https://github.com/aman00323/email-checker/blob/master/LICENSE) [![GitHub release](https://img.shields.io/github/v/tag/aman00323/email-checker)](https://github.com/aman00323/email-checker/releases)
 
 
 Email Checker was created and maintained by [Aman Nurani](https://github.com/aman00323). It provides a powerful email validating system for both development and production for Laravel. It uses [fsockopen()](https://www.php.net/manual/en/function.fsockopen.php), [cURL](https://www.php.net/manual/en/book.curl.php) and many more to validate email address exists or not in real world.
 
 Nowadays most of websites are using registration process where they need to verify user's ownership. Mostly developers verify email by sending email verification link to the email, So this will store extra email in database (if they were not exists in real). Additionally some people use [disposable emails](https://en.wikipedia.org/wiki/Disposable_email_address) for temporary usage.
 
+# :tada: WE HAVE MORE THAN 25K DIPOSABLE DOMAIN LIST :tada:
 <center> THIS PACKAGE WILL HELP YOU TO VERIFY EMAIL </center>
 
 ## Installation
@@ -74,7 +77,7 @@ app(EmailChecker::class)->checkEmail('something@example.com','boolean'));
 
 As we have added new option with checkDisposableEmail() which has second argument that will enable deep check to compare domain with large list.
 
-Don't worry it would't take too much time. :)
+Don't worry it would't take too much time. :smile:
 
 All are different method you can use individually as per your requirement. To call all of the method at once use **Check Email**
 
