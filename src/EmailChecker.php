@@ -11,7 +11,12 @@ class EmailChecker
     public $details;
 
     public $result = '';
+    
+    public $email_from = 'example@example.com';
 
+    public function setFromEmail($email_from) {
+        $this->email_from = $email_from;
+    }
     /*
     ==============================================================
 
@@ -170,7 +175,7 @@ class EmailChecker
                         $out = fgets($connect, 1024);
                         $detailsDesc .= $out . "\n";
                         // Send an SMTP Mail command from the sender's email address
-                        fputs($connect, "MAIL FROM: <example@example.com>\r\n");
+                        fputs($connect, "MAIL FROM: <{$this->email_from}>\r\n");
                         $from = fgets($connect, 1024);
                         $detailsDesc .= $from . "\n";
                         // Send the SCPT command with the recepient's email address
