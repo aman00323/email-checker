@@ -1,6 +1,6 @@
 # Email Checker
 
-[![MadeWithLaravel.com shield](https://madewithlaravel.com/storage/repo-shields/1689-shield.svg)](https://madewithlaravel.com/p/email-checker/shield-link) [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/aman00323/StrapDown.js/graphs/commit-activity) [![GitHub license](https://img.shields.io/github/license/aman00323/email-checker)](https://github.com/aman00323/email-checker/blob/master/LICENSE) [![GitHub release](https://img.shields.io/github/v/tag/aman00323/email-checker)](https://github.com/aman00323/email-checker/releases)
+![CircleCI](https://img.shields.io/circleci/build/github/aman00323/email-checker) [![MadeWithLaravel.com shield](https://madewithlaravel.com/storage/repo-shields/1689-shield.svg)](https://madewithlaravel.com/p/email-checker/shield-link) [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/aman00323/StrapDown.js/graphs/commit-activity) [![GitHub license](https://img.shields.io/github/license/aman00323/email-checker)](https://github.com/aman00323/email-checker/blob/master/LICENSE) [![GitHub release](https://img.shields.io/github/v/tag/aman00323/email-checker)](https://github.com/aman00323/email-checker/releases)
 
 
 Email Checker was created and maintained by [Aman Nurani](https://github.com/aman00323). It provides a powerful email validating system for both development and production for Laravel. It uses [fsockopen()](https://www.php.net/manual/en/function.fsockopen.php), [cURL](https://www.php.net/manual/en/book.curl.php) and many more to validate email address exists or not in real world.
@@ -51,7 +51,7 @@ app(EmailChecker::class)->setFromEmail('something@example.com','boolean'));
 OR
 Set ENV variable in your .env
 ```php
-EMAIL_CHECKER_SET_FROM=something@example.com
+EMAIL_CHECKER_SET_FROM='something@example.com'
 ```
 
 Another usage is to check [DNS](https://en.wikipedia.org/wiki/Domain_Name_System) and [MX Record](https://en.wikipedia.org/wiki/MX_record) of the email address, In this method package will try to extract records from email address and try to verify using [SMTP](https://en.wikipedia.org/wiki/Simple_Mail_Transfer_Protocol).
