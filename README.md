@@ -34,7 +34,7 @@ This option is part of checkDisposableEmail() method, you need to pass second ar
 
 When you pass true inside helper will check emails with list of dispossable. which are hosted on gist, So whenever list will be changed you would't have to update package.
 
-```
+```php
 app(EmailChecker::class)->checkDisposableEmail('something@example.com','boolean'));
 ```
 
@@ -42,11 +42,23 @@ This email verification will be done on the basis of [disposable emails](https:/
 
 ### Check DNS And MX Records
 
+*For better output you need to set from email address for this method*
+
+```php
+app(EmailChecker::class)->setFromEmail('something@example.com','boolean'));
+```
+
+OR
+Set ENV variable in your .env
+```php
+EMAIL_CHECKER_SET_FROM=something@example.com
+```
+
 Another usage is to check [DNS](https://en.wikipedia.org/wiki/Domain_Name_System) and [MX Record](https://en.wikipedia.org/wiki/MX_record) of the email address, In this method package will try to extract records from email address and try to verify using [SMTP](https://en.wikipedia.org/wiki/Simple_Mail_Transfer_Protocol).
 
 If this method will successfully extract records, then it will try to send HELLO message on the email address using [fsockopen()](https://www.php.net/manual/en/function.fsockopen.php), if it get valid status from MAIL server then it will return true. Also function will return true if it is not verify with the detail message.
 
-```
+```php
 app(EmailChecker::class)->checkMxAndDnsRecord('something@example.com'));
 ```
 This will return array with success and details, Details will indicate email verified with any exception or not.
@@ -59,7 +71,7 @@ Sometime it is hard to identify that email exist or not based on DNS and MX Reco
 
 This method ensures that email which is given has valid domain.
 
-```
+```php
 app(EmailChecker::class)->checkDomain('something@example.com'));
 ```
 
@@ -71,7 +83,7 @@ This method will use all of the methods and it gives detail response, if it give
 
 If any of the method will respond with FALSE then will not give detail report.
 
-```
+```php
 app(EmailChecker::class)->checkEmail('something@example.com','boolean'));
 ```
 

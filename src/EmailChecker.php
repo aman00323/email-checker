@@ -12,6 +12,28 @@ class EmailChecker
 
     public $result = '';
 
+    public $email_from = '';
+
+    /*
+    ==============================================================
+
+    This method will set from email address
+
+    ==============================================================
+
+    @return String
+     */
+    public function setFromEmail($email_from)
+    {
+        if (filter_var($email_from, FILTER_VALIDATE_EMAIL)) {
+            $this->email_from = $email_from;
+        } else if (filter_var(env('EMAIL_CHECKER_SET_FROM'), FILTER_VALIDATE_EMAIL)) {
+            $this->email_from = env('EMAIL_CHECKER_SET_FROM');
+        } else {
+            $this->email_from = 'example@example.com';
+        }
+    }
+
     /*
     ==============================================================
 
@@ -119,6 +141,10 @@ class EmailChecker
      */
     public function checkMxAndDnsRecord($email)
     {
+        if (empty($this->email_from)) {
+            $this->setFromEmail('');
+        }
+
         if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
             // Get the domain of the email recipient
             $detailsDesc = '';
@@ -170,7 +196,7 @@ class EmailChecker
                         $out = fgets($connect, 1024);
                         $detailsDesc .= $out . "\n";
                         // Send an SMTP Mail command from the sender's email address
-                        fputs($connect, "MAIL FROM: <example@example.com>\r\n");
+                        fputs($connect, "MAIL FROM: <" . $this->email_from . ">\r\n");
                         $from = fgets($connect, 1024);
                         $detailsDesc .= $from . "\n";
                         // Send the SCPT command with the recepient's email address

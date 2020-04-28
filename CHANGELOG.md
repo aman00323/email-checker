@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 2.2.0
+- Disposable domain list are added inside repo instead of gist.
+- Refactor helper method and optimize code for performance improvement.
+- Add testcases environment for laravel 6 for circle ci.
+- New testcases added for Helper.
+- Add .gitingore file.
+- Add option to set from email address.
+
 ## 2.1.0
 - Update some character list inside helper.
 - New domains added to disposable domain list, Now we have 25K domains list.
