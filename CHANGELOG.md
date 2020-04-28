@@ -6,6 +6,7 @@
 - Add testcases environment for laravel 6 for circle ci.
 - New testcases added for Helper.
 - Add .gitingore file.
+- Add option to set from email address.
 
 ## 2.1.0
 - Update some character list inside helper.
