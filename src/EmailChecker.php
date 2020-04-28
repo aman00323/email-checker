@@ -141,7 +141,7 @@ class EmailChecker
      */
     public function checkMxAndDnsRecord($email)
     {
-        if(empty($this->email_from)) {
+        if (empty($this->email_from)) {
             $this->setFromEmail('');
         }
 
@@ -196,7 +196,7 @@ class EmailChecker
                         $out = fgets($connect, 1024);
                         $detailsDesc .= $out . "\n";
                         // Send an SMTP Mail command from the sender's email address
-                        fputs($connect, "MAIL FROM: <".$this->email_from.">\r\n");
+                        fputs($connect, "MAIL FROM: <" . $this->email_from . ">\r\n");
                         $from = fgets($connect, 1024);
                         $detailsDesc .= $from . "\n";
                         // Send the SCPT command with the recepient's email address
