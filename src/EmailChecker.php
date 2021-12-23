@@ -168,7 +168,7 @@ class EmailChecker
                 getmxrr($domain, $mxhosts, $mxweight);
             }
             if (!empty($mxhosts)) {
-                $mx_ip = $mxhosts[array_search(min($mxweight), $mxhosts)];
+                $mx_ip = $mxhosts[array_search(min($mxweight), $mxweight)];
             } else {
                 // If MX records not found, get the A DNS records for the host
                 if (filter_var($domain, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
@@ -250,8 +250,8 @@ class EmailChecker
         if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $domain = 'http://' . $this->splitEmail($email);
             $httpcode = $this->goCurl($domain);
-            if ($httpcode === 301) {
-                $domain = 'https://' . $this->splitEmail($email);
+            if ($httpcode === 0) {
+                $domain = 'http://www.' . $this->splitEmail($email);
                 $httpcode = $this->goCurl($domain);
             }
             if ($httpcode >= 200 && $httpcode < 300) {
@@ -285,7 +285,6 @@ class EmailChecker
         curl_setopt($init, CURLOPT_CONNECTTIMEOUT, 5);
         curl_setopt($init, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($init, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($init, CURLOPT_MAXREDIRS, 3);
         curl_exec($init);
         $httpcode = curl_getinfo($init, CURLINFO_HTTP_CODE);
         curl_close($init);
