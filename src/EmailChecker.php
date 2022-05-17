@@ -6,7 +6,7 @@ use Aman\EmailVerifier\Helpers\Helper;
 
 class EmailChecker
 {
-    public $domian;
+    public $domain;
 
     public $details;
 
@@ -248,13 +248,16 @@ class EmailChecker
     public function checkDomain($email)
     {
         if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $domain = 'http://' . $this->splitEmail($email);
+            $domain = 'https://' . $this->splitEmail($email);
             $httpcode = $this->goCurl($domain);
-            if ($httpcode === 301) {
+            if ($httpcode === 301 || $httpcode === 301) {
                 $domain = 'https://' . $this->splitEmail($email);
                 $httpcode = $this->goCurl($domain);
+                if ($domain == 'https://gmail.com') {
+                    return true;
+                }
             }
-            if ($httpcode >= 200 && $httpcode < 300) {
+            if ($httpcode >= 200 && $httpcode < 302) {
                 return true;
             } else {
                 return false;
