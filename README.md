@@ -17,7 +17,7 @@ Email Checker requires [PHP](https://php.net) > 7.0. This particular version sup
 To get the latest version, simply require the project using [Composer](https://getcomposer.org):
 
 ```bash
-$ composer require aman00323/emailchecker
+composer require aman00323/emailchecker
 ```
 
 Once installed, You need to include `Aman\EmailVerifier\EmailChecker` to access methods for email verify.
