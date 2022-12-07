@@ -17,7 +17,7 @@ Email Checker requires [PHP](https://php.net) >= 8.1 and supports modern [Larave
 To get the latest version, simply require the project using [Composer](https://getcomposer.org):
 
 ```bash
-$ composer require aman00323/emailchecker
+composer require aman00323/emailchecker
 ```
 
 Once installed, include `Aman\EmailVerifier\EmailChecker` to access validation methods.
