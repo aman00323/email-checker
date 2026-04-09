@@ -6,7 +6,16 @@ use Aman\EmailVerifier\Helpers\Helper;
 
 class EmailChecker
 {
+    public const RESPONSE_KEY_DISPOSABLE = 'disposable';
+
+    public const RESPONSE_KEY_DISPOSSABLE_LEGACY = 'dispossable';
+
+    /**
+     * @deprecated Kept for backward compatibility. Use $domain instead.
+     */
     public $domian;
+
+    public $domain;
 
     public $details;
 
@@ -27,8 +36,8 @@ class EmailChecker
     {
         if (filter_var($email_from, FILTER_VALIDATE_EMAIL)) {
             $this->email_from = $email_from;
-        } else if (filter_var(env('EMAIL_CHECKER_SET_FROM'), FILTER_VALIDATE_EMAIL)) {
-            $this->email_from = env('EMAIL_CHECKER_SET_FROM');
+        } elseif (filter_var(getenv('EMAIL_CHECKER_SET_FROM'), FILTER_VALIDATE_EMAIL)) {
+            $this->email_from = getenv('EMAIL_CHECKER_SET_FROM');
         } else {
             $this->email_from = 'example@example.com';
         }
@@ -75,20 +84,17 @@ class EmailChecker
             if ($this->checkDomain($email) === false) {
                 return [
                     'success' => false,
-                    'error' => 'Unable to verify email address.',
+                    'error' => 'Unable to verify email domain.',
                 ];
             } else {
                 $domain = [
                     'success' => true,
-                    'detail' => 'Domain is exist.',
+                    'detail' => 'Domain exists.',
                 ];
             }
             return [
                 'success' => true,
-                'dispossable' => $disposable,
-                'mxrecord' => $mxrecord,
-                'domain' => $domain,
-            ];
+            ] + $this->buildSuccessPayload($disposable, $mxrecord, $domain);
         } else {
             return [
                 'success' => false,
@@ -159,6 +165,7 @@ class EmailChecker
                 $domain = substr($domain, strlen('IPv6') + 1);
             }
             $mxhosts = array();
+            $mxweight = array();
 
             // Check if the domain has an IP address assigned to it
             if (filter_var($domain, FILTER_VALIDATE_IP)) {
@@ -168,17 +175,21 @@ class EmailChecker
                 getmxrr($domain, $mxhosts, $mxweight);
             }
             if (!empty($mxhosts)) {
-                $mx_ip = $mxhosts[array_search(min($mxweight), $mxhosts)];
+                $lowestWeightIndex = array_search(min($mxweight), $mxweight);
+                $mx_ip = $mxhosts[$lowestWeightIndex];
             } else {
                 // If MX records not found, get the A DNS records for the host
+                $record_a = array();
                 if (filter_var($domain, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
                     $record_a = dns_get_record($domain, DNS_A);
                     // else get the AAAA IPv6 address record
                 } elseif (filter_var($domain, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
                     $record_a = dns_get_record($domain, DNS_AAAA);
+                } else {
+                    $record_a = dns_get_record($domain, DNS_A + DNS_AAAA);
                 }
                 if (!empty($record_a)) {
-                    $mx_ip = $record_a[0]['ip'];
+                    $mx_ip = isset($record_a[0]['ip']) ? $record_a[0]['ip'] : $record_a[0]['ipv6'];
                 } else {
                     // Exit the program if no MX records are found for the domain host
                     $result = 'invalid';
@@ -215,15 +226,15 @@ class EmailChecker
                             $details = 'Valid email address';
                         }
                     } else {
-                        $result = 'valid';
-                        $details = 'MX record found but could not connect to server';
+                        $result = 'invalid';
+                        $details = 'MX record found but SMTP handshake failed';
                     }
                 } else {
-                    $result = 'valid';
+                    $result = 'invalid';
                     $details = 'MX record found but could not connect to server';
                 }
-            } catch (Exception $e) {
-                $result = 'valid';
+            } catch (\Exception $e) {
+                $result = 'invalid';
                 $details = 'MX record found but could not connect to server';
             }
             return array($result, $details);
@@ -248,13 +259,14 @@ class EmailChecker
     public function checkDomain($email)
     {
         if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $domain = 'http://' . $this->splitEmail($email);
-            $httpcode = $this->goCurl($domain);
-            if ($httpcode === 301) {
-                $domain = 'https://' . $this->splitEmail($email);
-                $httpcode = $this->goCurl($domain);
-            }
-            if ($httpcode >= 200 && $httpcode < 300) {
+            $domain = $this->splitEmail($email);
+
+            if (
+                checkdnsrr($domain, 'MX') ||
+                checkdnsrr($domain, 'A') ||
+                checkdnsrr($domain, 'AAAA') ||
+                checkdnsrr($domain, 'CNAME')
+            ) {
                 return true;
             } else {
                 return false;
@@ -275,20 +287,21 @@ class EmailChecker
      */
     private function splitEmail($email)
     {
-        return substr(strrchr($email, "@"), 1);
+        $domain = substr(strrchr($email, "@"), 1);
+        $this->domain = $domain;
+        $this->domian = $domain;
+
+        return $domain;
     }
 
-    private function goCurl($domain)
+    private function buildSuccessPayload($disposable, $mxrecord, $domain)
     {
-        $init = curl_init($domain);
-        curl_setopt($init, CURLOPT_TIMEOUT, 5);
-        curl_setopt($init, CURLOPT_CONNECTTIMEOUT, 5);
-        curl_setopt($init, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($init, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($init, CURLOPT_MAXREDIRS, 3);
-        curl_exec($init);
-        $httpcode = curl_getinfo($init, CURLINFO_HTTP_CODE);
-        curl_close($init);
-        return $httpcode;
+        return [
+            self::RESPONSE_KEY_DISPOSABLE => $disposable,
+            self::RESPONSE_KEY_DISPOSSABLE_LEGACY => $disposable,
+            'mxrecord' => $mxrecord,
+            'domain' => $domain,
+        ];
     }
+
 }
