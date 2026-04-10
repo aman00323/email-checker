@@ -48,8 +48,13 @@ jobs:
           python - <<'PY'
           import json
 
-          path = "results.sarif"
-          with open(path, "r", encoding="utf-8") as f:
+          source_path = "results.sarif"
+          output_path = "results-normalized.sarif"
+
+          # Some Codacy plugins may log parser warnings such as
+          # "No specified files" when no matching files are present.
+          # We still normalize and upload the SARIF produced.
+          with open(source_path, "r", encoding="utf-8") as f:
               sarif = json.load(f)
 
           runs = sarif.get("runs", [])
@@ -58,7 +63,7 @@ jobs:
               automation["id"] = f"codacy/run-{index}"
               run["automationDetails"] = automation
 
-          with open(path, "w", encoding="utf-8") as f:
+          with open(output_path, "w", encoding="utf-8") as f:
               json.dump(sarif, f, ensure_ascii=False)
           PY
 
@@ -66,4 +71,4 @@ jobs:
       - name: Upload SARIF results file
         uses: github/codeql-action/upload-sarif@v4
         with:
-          sarif_file: results.sarif
+          sarif_file: results-normalized.sarif
