@@ -115,4 +115,16 @@ All contributors are welcome. Please keep code style consistent and ensure tests
 
 Note: No email verifier can guarantee 100% certainty for every mailbox because many mail servers intentionally limit probe-based verification.
 
+## Keeping Disposable Domains Updated
+
+You can refresh the domain dataset locally with:
+
+```bash
+composer update-disposable-domains
+```
+
+This command fetches trusted source lists, normalizes and deduplicates domains, rewrites shard files in `resources/domains`, and updates `resources/domains/metadata.json`.
+
+The repository also includes a daily scheduled GitHub Actions workflow to automate refreshes and open pull requests when updates are available.
+
 

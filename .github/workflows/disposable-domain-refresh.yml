@@ -1,0 +1,50 @@
+name: Refresh Disposable Domains
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 4 * * *'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Update disposable domain list
+        run: composer update-disposable-domains
+
+      - name: Run helper tests
+        run: ./vendor/bin/phpunit tests/HelperTest.php
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: 'chore(data): refresh disposable domain list'
+          title: 'chore(data): refresh disposable domain list'
+          body: |
+            Automated weekly refresh of disposable email domain data.
+
+            - Regenerated sharded domain files
+            - Updated metadata timestamp and counts
+            - Ran helper dataset validation tests
+          branch: chore/refresh-disposable-domain-list
+          labels: |
+            chore
+            data-update

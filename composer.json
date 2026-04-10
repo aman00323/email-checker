@@ -47,5 +47,8 @@
     "require-dev": {
         "phpunit/phpunit": "^10.5|^11.5",
         "orchestra/testbench": "^8.0|^9.0|^10.0"
+    },
+    "scripts": {
+        "update-disposable-domains": "php scripts/update-disposable-domains.php"
     }
 }
