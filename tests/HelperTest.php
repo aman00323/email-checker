@@ -32,6 +32,63 @@ class HelperTest extends TestCase
         self::assertFalse(Helper::deepCheck('invalid-domain'));
     }
 
+    public function testDeepCheckHandlesEmailLikeInputAndNonAlnumCandidates(): void
+    {
+        // Covers normalizeDomain() branch that strips text before the last '@'.
+        self::assertTrue(Helper::deepCheck('User@MAILINATOR.COM'));
+
+        // Covers deepCheck() loop continue branch for candidates starting with non [a-z0-9].
+        self::assertTrue(Helper::deepCheck('.mailinator.com'));
+    }
+
+    public function testLoadShardAsSetReturnsEmptyArrayWhenFileIsMissing(): void
+    {
+        $this->resetShardCache();
+
+        $result = $this->invokeLoadShardAsSet('!');
+
+        self::assertSame([], $result);
+    }
+
+    public function testLoadShardAsSetReturnsEmptyArrayWhenJsonIsInvalidType(): void
+    {
+        $this->resetShardCache();
+
+        $path = __DIR__ . '/../resources/domains/_.json';
+        file_put_contents($path, '"not-an-array"');
+
+        try {
+            $result = $this->invokeLoadShardAsSet('_');
+            self::assertSame([], $result);
+        } finally {
+            @unlink($path);
+            $this->resetShardCache();
+        }
+    }
+
+    public function testLoadShardAsSetReturnsEmptyArrayWhenFileCannotBeRead(): void
+    {
+        $this->resetShardCache();
+
+        $path = __DIR__ . '/../resources/domains/~.json';
+        file_put_contents($path, "mailinator.com\n");
+        @chmod($path, 0000);
+
+        try {
+            set_error_handler(static function (): bool {
+                return true;
+            });
+
+            $result = $this->invokeLoadShardAsSet('~');
+            self::assertSame([], $result);
+        } finally {
+            restore_error_handler();
+            @chmod($path, 0644);
+            @unlink($path);
+            $this->resetShardCache();
+        }
+    }
+
     public function testDisposableDomainFileExists(): void
     {
         $path = __DIR__ . '/../resources/domains/';
@@ -135,6 +192,27 @@ class HelperTest extends TestCase
             'something@trbvm.com',
             'anything@boximail.com',
         ];
+    }
+
+    /**
+     * @return array<string, bool>
+     */
+    private function invokeLoadShardAsSet(string $shardKey): array
+    {
+        $method = new \ReflectionMethod(Helper::class, 'loadShardAsSet');
+        $method->setAccessible(true);
+
+        /** @var array<string, bool> $result */
+        $result = $method->invoke(null, $shardKey);
+
+        return $result;
+    }
+
+    private function resetShardCache(): void
+    {
+        $property = new \ReflectionProperty(Helper::class, 'shardCache');
+        $property->setAccessible(true);
+        $property->setValue([]);
     }
 
 }
