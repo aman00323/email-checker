@@ -44,6 +44,9 @@ class HelperTest extends TestCase
     {
         $seen = [];
         $path = __DIR__ . '/../resources/domains/';
+        $invalidDomains = [];
+        $invalidShardAssignments = [];
+        $duplicateDomains = [];
 
         foreach (self::DOMAIN_SHARDS as $shard) {
             $raw = file_get_contents($path . $shard . '.json');
@@ -53,17 +56,34 @@ class HelperTest extends TestCase
             self::assertIsArray($domains);
 
             foreach ($domains as $domain) {
-                self::assertIsString($domain);
-                self::assertSame(strtolower($domain), $domain);
-                self::assertMatchesRegularExpression('/^[a-z0-9](?:[a-z0-9-]{0,253}[a-z0-9])?(?:\.[a-z0-9-]{1,63})+$/', $domain);
+                if (!is_string($domain)) {
+                    $invalidDomains[] = '[non-string domain in shard ' . $shard . ']';
+                    continue;
+                }
+
+                if (
+                    $domain !== strtolower($domain) ||
+                    !preg_match('/^[a-z0-9](?:[a-z0-9-]{0,253}[a-z0-9])?(?:\.[a-z0-9-]{1,63})+$/', $domain)
+                ) {
+                    $invalidDomains[] = $domain;
+                }
 
                 $firstCharacter = substr($domain, 0, 1);
-                self::assertSame($shard, $firstCharacter);
+                if ($firstCharacter !== $shard) {
+                    $invalidShardAssignments[] = $domain . ' => ' . $shard;
+                }
 
-                self::assertArrayNotHasKey($domain, $seen, 'Duplicate disposable domain found: ' . $domain);
+                if (isset($seen[$domain])) {
+                    $duplicateDomains[] = $domain;
+                }
+
                 $seen[$domain] = true;
             }
         }
+
+        self::assertSame([], $invalidDomains, 'Invalid domains found: ' . implode(', ', array_slice($invalidDomains, 0, 10)));
+        self::assertSame([], $invalidShardAssignments, 'Wrong shard assignment found: ' . implode(', ', array_slice($invalidShardAssignments, 0, 10)));
+        self::assertSame([], $duplicateDomains, 'Duplicate disposable domains found: ' . implode(', ', array_slice($duplicateDomains, 0, 10)));
 
         self::assertGreaterThan(1000, count($seen));
     }
