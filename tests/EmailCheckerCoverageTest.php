@@ -55,6 +55,10 @@ final class EmailCheckerFunctionMocks
     }
 }
 
+/**
+ * @param array<int, string> $hosts
+ * @param array<int, int> $weights
+ */
 function getmxrr(string $hostname, array &$hosts, array &$weights): bool
 {
     $hosts = EmailCheckerFunctionMocks::$getmxrrHosts;
@@ -110,13 +114,17 @@ function fgets($handle, ?int $length = null): string|false
         return \fgets($handle);
     }
 
+    if ($length <= 0) {
+        return false;
+    }
+
     return \fgets($handle, $length);
 }
 
 /**
  * @param resource $handle
  */
-function fputs($handle, string $data): int|false
+function fputs($handle, string $data): int
 {
     EmailCheckerFunctionMocks::$writes[] = $data;
 

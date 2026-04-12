@@ -29,6 +29,6 @@ class EmailCheckerFacadeTest extends TestCase
         $root = EmailCheckerFacade::getFacadeRoot();
 
         self::assertInstanceOf(EmailChecker::class, $root);
-        self::assertTrue(EmailCheckerFacade::isSmtpProbeEnabled());
+        self::assertTrue($root->isSmtpProbeEnabled());
     }
 }
