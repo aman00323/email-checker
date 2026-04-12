@@ -11,6 +11,7 @@ jobs:
   tests:
     name: PHP ${{ matrix.php }}
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
@@ -27,12 +28,58 @@ jobs:
           extensions: curl
           coverage: none
           tools: composer:v2
+          ini-values: memory_limit=-1
+
+      - name: Cache Composer downloads
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache/files
+          key: ${{ runner.os }}-php-${{ matrix.php }}-composer-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php-${{ matrix.php }}-composer-
+            ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Run tests
+        run: ./vendor/bin/phpunit
+
+  quality:
+    name: Quality (PHP 8.4)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: tests
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: curl
+          coverage: none
+          tools: composer:v2
+          ini-values: memory_limit=-1
+
+      - name: Cache Composer downloads
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache/files
+          key: ${{ runner.os }}-php-8.4-composer-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php-8.4-composer-
+            ${{ runner.os }}-composer-
 
       - name: Validate composer.json
         run: composer validate --strict
 
       - name: Install dependencies
-        run: composer update --no-interaction --no-progress --prefer-dist
+        run: composer install --no-interaction --no-progress --prefer-dist
 
-      - name: Run tests
-        run: ./vendor/bin/phpunit
+      - name: Run static analysis
+        run: ./vendor/bin/phpstan analyse --memory-limit=1G
+
+      - name: Run coding style checks
+        run: ./vendor/bin/php-cs-fixer fix --dry-run --diff --allow-risky=yes

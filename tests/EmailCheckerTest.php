@@ -1,36 +1,49 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Aman\EmailVerifier\Tests;
 
 use Aman\EmailVerifier\EmailChecker;
 
 class EmailCheckerTest extends TestCase
 {
-    private function fakeChecker($domainResult = true, $mxResult = array('valid', 'Valid email address'))
+    /**
+     * @param array{0: string, 1: string} $mxResult
+     */
+    private function fakeChecker(bool $domainResult = true, array $mxResult = ['valid', 'Valid email address']): EmailChecker
     {
-        return new class($domainResult, $mxResult) extends EmailChecker {
-            private $domainResult;
-            private $mxResult;
+        return new class ($domainResult, $mxResult) extends EmailChecker {
+            private bool $domainResult;
 
-            public function __construct($domainResult, $mxResult)
+            /** @var array{0: string, 1: string} */
+            private array $mxResult;
+
+            /**
+             * @param array{0: string, 1: string} $mxResult
+             */
+            public function __construct(bool $domainResult, array $mxResult)
             {
                 $this->domainResult = $domainResult;
                 $this->mxResult = $mxResult;
             }
 
-            public function checkDomain($email)
+            public function checkDomain(string $email): bool
             {
                 return $this->domainResult;
             }
 
-            public function checkMxAndDnsRecord($email)
+            /**
+             * @return array{0: string, 1: string}
+             */
+            public function checkMxAndDnsRecord(string $email): array
             {
                 return $this->mxResult;
             }
         };
     }
 
-    public function testCheckDisposableEmail()
+    public function testCheckDisposableEmail(): void
     {
         $emailChecker = new EmailChecker();
         $dispossibleEmail = $this->disposableEmailList();
@@ -47,7 +60,7 @@ class EmailCheckerTest extends TestCase
         }
     }
 
-    public function testCheckDomain()
+    public function testCheckDomain(): void
     {
         $emailChecker = $this->fakeChecker(true);
         self::assertTrue($emailChecker->checkDomain('user@example.com'));
@@ -59,7 +72,7 @@ class EmailCheckerTest extends TestCase
 
     }
 
-    public function testCheckEmailReturnsFalseForDisposableEmail()
+    public function testCheckEmailReturnsFalseForDisposableEmail(): void
     {
         $emailChecker = new EmailChecker();
         $dispossibleEmail = $this->disposableEmailList();
@@ -69,9 +82,9 @@ class EmailCheckerTest extends TestCase
         }
     }
 
-    public function testCheckEmailReturnsSuccessPayloadForValidInputs()
+    public function testCheckEmailReturnsSuccessPayloadForValidInputs(): void
     {
-        $emailChecker = $this->fakeChecker(true, array('valid', 'Valid email address'));
+        $emailChecker = $this->fakeChecker(true, ['valid', 'Valid email address']);
         $response = $emailChecker->checkEmail('user@gmail.com');
 
         self::assertTrue($response['success']);
@@ -82,7 +95,7 @@ class EmailCheckerTest extends TestCase
         self::assertSame($response['disposable'], $response['dispossable']);
     }
 
-    public function testSplitEmailKeepsLegacyAndModernDomainPropertiesInSync()
+    public function testSplitEmailKeepsLegacyAndModernDomainPropertiesInSync(): void
     {
         $emailChecker = new EmailChecker();
         $emailChecker->checkDisposableEmail('temp@yahoo.com');
@@ -91,52 +104,91 @@ class EmailCheckerTest extends TestCase
         self::assertSame($emailChecker->domain, $emailChecker->domian);
     }
 
-    public function testCheckEmailReturnsErrorWhenMxValidationFails()
+    public function testCheckEmailReturnsErrorWhenMxValidationFails(): void
     {
-        $emailChecker = $this->fakeChecker(true, array('invalid', 'No suitable MX records found.'));
+        $emailChecker = $this->fakeChecker(true, ['invalid', 'No suitable MX records found.']);
         $response = $emailChecker->checkEmail('user@gmail.com');
 
         self::assertFalse($response['success']);
         self::assertSame('Entered email address has no MX and DNS record.', $response['error']);
     }
 
-    public function testCheckEmailReturnsErrorWhenDomainValidationFails()
+    public function testCheckEmailReturnsErrorWhenDomainValidationFails(): void
     {
-        $emailChecker = $this->fakeChecker(false, array('valid', 'Valid email address'));
+        $emailChecker = $this->fakeChecker(false, ['valid', 'Valid email address']);
         $response = $emailChecker->checkEmail('user@gmail.com');
 
         self::assertFalse($response['success']);
         self::assertSame('Unable to verify email domain.', $response['error']);
     }
 
-    public function testCheckMxAndDnsRecordRejectsInvalidEmail()
+    public function testCheckMxAndDnsRecordRejectsInvalidEmail(): void
     {
         $emailChecker = new EmailChecker();
         $response = $emailChecker->checkMxAndDnsRecord('invalid-email');
 
-        self::assertSame(array('invalid', 'Validation error email address.'), $response);
+        self::assertSame(['invalid', 'Validation error email address.'], $response);
     }
 
-    private function disposableEmailList()
+    public function testSmtpProbeConfigurationMethods(): void
+    {
+        $emailChecker = new EmailChecker();
+
+        self::assertTrue($emailChecker->isSmtpProbeEnabled());
+
+        $emailChecker->setSmtpProbeEnabled(false)
+            ->setSmtpPort(2525)
+            ->setSmtpTimeoutSeconds(10);
+
+        self::assertFalse($emailChecker->isSmtpProbeEnabled());
+        self::assertSame(2525, $emailChecker->getSmtpPort());
+        self::assertSame(10, $emailChecker->getSmtpTimeoutSeconds());
+    }
+
+    public function testContainerResolvedCheckerAppliesConfigDefaults(): void
+    {
+        $this->app['config']->set('emailchecker', [
+            'smtp_probe' => false,
+            'smtp_port' => 2526,
+            'smtp_timeout_seconds' => 9,
+            'from_email' => 'package@test.dev',
+        ]);
+
+        /** @var EmailChecker $checker */
+        $checker = $this->app->make('emailchecker');
+
+        self::assertFalse($checker->isSmtpProbeEnabled());
+        self::assertSame(2526, $checker->getSmtpPort());
+        self::assertSame(9, $checker->getSmtpTimeoutSeconds());
+        self::assertSame('package@test.dev', $checker->email_from);
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function disposableEmailList(): array
     {
         //TODO : add list support for dispossable emails
-        return array(
+        return [
             'df@mailinator.com',
             'df@spamevader.com',
             'temp@tempmail.com',
             'something@trbvm.com',
             'anything@boximail.com',
-        );
+        ];
     }
 
-    private function emailList()
+    /**
+     * @return array<int, string>
+     */
+    private function emailList(): array
     {
         //Some email address with the valid domain
-        return array(
+        return [
             'temp@yahoo.com',
             'something@outlook.com',
             'anything@yahoo.com',
-        );
+        ];
     }
 
 }

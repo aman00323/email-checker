@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Aman\EmailVerifier;
 
 use Aman\EmailVerifier\Helpers\Helper;
@@ -10,18 +12,42 @@ class EmailChecker
 
     public const RESPONSE_KEY_DISPOSSABLE_LEGACY = 'dispossable';
 
+    private const STATUS_VALID = 'valid';
+
+    private const STATUS_INVALID = 'invalid';
+
+    private const DEFAULT_SMTP_PORT = 25;
+
+    private const DEFAULT_SMTP_TIMEOUT_SECONDS = 5;
+
+    private const DEFAULT_EMAIL_FROM = 'example@example.com';
+
+    private const ERROR_INVALID_EMAIL = 'Please enter valid email address';
+
+    private const ERROR_DISPOSABLE_EMAIL = 'Entered email address is disposable';
+
+    private const ERROR_MX_DNS = 'Entered email address has no MX and DNS record.';
+
+    private const ERROR_DOMAIN = 'Unable to verify email domain.';
+
     /**
      * @deprecated Kept for backward compatibility. Use $domain instead.
      */
-    public $domian;
+    public string $domian = '';
 
-    public $domain;
+    public string $domain = '';
 
-    public $details;
+    public string $details = '';
 
-    public $result = '';
+    public string $result = '';
 
-    public $email_from = '';
+    public string $email_from = '';
+
+    private bool $smtpProbeEnabled = true;
+
+    private int $smtpPort = self::DEFAULT_SMTP_PORT;
+
+    private int $smtpTimeoutSeconds = self::DEFAULT_SMTP_TIMEOUT_SECONDS;
 
     /*
     ==============================================================
@@ -32,15 +58,55 @@ class EmailChecker
 
     @return String
      */
-    public function setFromEmail($email_from)
+    public function setFromEmail(string $email_from): void
     {
         if (filter_var($email_from, FILTER_VALIDATE_EMAIL)) {
             $this->email_from = $email_from;
         } elseif (filter_var(getenv('EMAIL_CHECKER_SET_FROM'), FILTER_VALIDATE_EMAIL)) {
-            $this->email_from = getenv('EMAIL_CHECKER_SET_FROM');
+            $this->email_from = (string) getenv('EMAIL_CHECKER_SET_FROM');
         } else {
-            $this->email_from = 'example@example.com';
+            $this->email_from = self::DEFAULT_EMAIL_FROM;
         }
+    }
+
+    public function setSmtpProbeEnabled(bool $enabled): self
+    {
+        $this->smtpProbeEnabled = $enabled;
+
+        return $this;
+    }
+
+    public function isSmtpProbeEnabled(): bool
+    {
+        return $this->smtpProbeEnabled;
+    }
+
+    public function setSmtpPort(int $port): self
+    {
+        if ($port > 0 && $port <= 65535) {
+            $this->smtpPort = $port;
+        }
+
+        return $this;
+    }
+
+    public function getSmtpPort(): int
+    {
+        return $this->smtpPort;
+    }
+
+    public function setSmtpTimeoutSeconds(int $timeoutSeconds): self
+    {
+        if ($timeoutSeconds > 0) {
+            $this->smtpTimeoutSeconds = $timeoutSeconds;
+        }
+
+        return $this;
+    }
+
+    public function getSmtpTimeoutSeconds(): int
+    {
+        return $this->smtpTimeoutSeconds;
     }
 
     /*
@@ -52,55 +118,48 @@ class EmailChecker
 
     @return array
      */
-    public function checkEmail($email, $deepCheck = false)
+    /**
+     * @return array<string, mixed>
+     */
+    public function checkEmail(string $email, bool $deepCheck = false): array
     {
-        $disposable = $mxrecord = $domain = array();
+        $disposable = $mxrecord = $domain = [];
 
-        if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            // check for disposable email
-            if ($this->checkDisposableEmail($email, $deepCheck) === true) {
-                return [
-                    'success' => false,
-                    'error' => 'Entered email address is disposable',
-                ];
-            } else {
-                $disposable = [
-                    'success' => true,
-                    'detail' => 'Email address is not disposable',
-                ];
-            }
-            $verify = $this->checkMxAndDnsRecord($email);
-            if ($verify[0] !== 'valid') {
-                return [
-                    'success' => false,
-                    'error' => 'Entered email address has no MX and DNS record.',
-                ];
-            } else {
-                $mxrecord = [
-                    'success' => true,
-                    'detail' => $verify[1],
-                ];
-            }
-            if ($this->checkDomain($email) === false) {
-                return [
-                    'success' => false,
-                    'error' => 'Unable to verify email domain.',
-                ];
-            } else {
-                $domain = [
-                    'success' => true,
-                    'detail' => 'Domain exists.',
-                ];
-            }
-            return [
-                'success' => true,
-            ] + $this->buildSuccessPayload($disposable, $mxrecord, $domain);
-        } else {
-            return [
-                'success' => false,
-                'error' => 'Please enter valid email address',
-            ];
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return $this->failureResponse(self::ERROR_INVALID_EMAIL);
         }
+
+        if ($this->checkDisposableEmail($email, $deepCheck)) {
+            return $this->failureResponse(self::ERROR_DISPOSABLE_EMAIL);
+        }
+
+        $disposable = [
+            'success' => true,
+            'detail' => 'Email address is not disposable',
+        ];
+
+        $verify = $this->checkMxAndDnsRecord($email);
+        if ($verify[0] !== self::STATUS_VALID) {
+            return $this->failureResponse(self::ERROR_MX_DNS);
+        }
+
+        $mxrecord = [
+            'success' => true,
+            'detail' => $verify[1],
+        ];
+
+        if (!$this->checkDomain($email)) {
+            return $this->failureResponse(self::ERROR_DOMAIN);
+        }
+
+        $domain = [
+            'success' => true,
+            'detail' => 'Domain exists.',
+        ];
+
+        return [
+            'success' => true,
+        ] + $this->buildSuccessPayload($disposable, $mxrecord, $domain);
     }
 
     /*
@@ -112,16 +171,15 @@ class EmailChecker
 
     @return true | false
      */
-    public function checkDisposableEmail($email, $deepCheck = false)
+    public function checkDisposableEmail(string $email, bool $deepCheck = false): bool
     {
         if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $domain = $this->splitEmail($email);
-            if (preg_match("/(ThrowAwayMail|DeadAddress|10MinuteMail|20MinuteMail|AirMail|Dispostable|Email Sensei|EmailThe|FilzMail|Guerrillamail|IncognitoEmail|Koszmail|Mailcatch|Mailinator|Mailnesia|MintEmail|MyTrashMail|NoClickEmail|
+            if (preg_match('/(ThrowAwayMail|DeadAddress|10MinuteMail|20MinuteMail|AirMail|Dispostable|Email Sensei|EmailThe|FilzMail|Guerrillamail|IncognitoEmail|Koszmail|Mailcatch|Mailinator|Mailnesia|MintEmail|MyTrashMail|NoClickEmail|
             SpamSpot|Spamavert|Spamfree24|TempEmail|Thrashmail.ws|Yopmail|EasyTrashMail|Jetable|MailExpire|MeltMail|Spambox|empomail|33Mail|
             E4ward|GishPuppy|InboxAlias|MailNull|Spamex|Spamgourmet|BloodyVikings|SpamControl|MailCatch|Tempomail|EmailSensei|Yopmail|
             Trasmail|Guerrillamail|Yopmail|boximail|ghacks|Maildrop|MintEmail|fixmail|gelitik.in|ag.us.to|mobi.web.id
-            |fansworldwide.de|privymail.de|gishpuppy|spamevader|uroid|tempmail|soodo|deadaddress|trbvm)/i", $domain)) // Possiblities of domain name that can genrate dispossable emails COURTESY FORMGET
-            {
+            |fansworldwide.de|privymail.de|gishpuppy|spamevader|uroid|tempmail|soodo|deadaddress|trbvm)/i', $domain)) { // Possiblities of domain name that can genrate dispossable emails COURTESY FORMGET
                 return true;
             }
 
@@ -145,103 +203,96 @@ class EmailChecker
 
     @return array with details
      */
-    public function checkMxAndDnsRecord($email)
+    /**
+     * @return array{0: string, 1: string}
+     */
+    public function checkMxAndDnsRecord(string $email): array
     {
         if (empty($this->email_from)) {
             $this->setFromEmail('');
         }
 
-        if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            // Get the domain of the email recipient
-            $detailsDesc = '';
-            $email_arr = explode('@', $email);
-            $domain = array_slice($email_arr, -1);
-            $domain = $domain[0];
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return [self::STATUS_INVALID, 'Validation error email address.'];
+        }
 
-            // Trim [ and ] from beginning and end of domain string, respectively
-            $domain = ltrim($domain, '[');
-            $domain = rtrim($domain, ']');
-            if ('IPv6:' == substr($domain, 0, strlen('IPv6:'))) {
-                $domain = substr($domain, strlen('IPv6') + 1);
-            }
-            $mxhosts = array();
-            $mxweight = array();
+        $email_arr = explode('@', $email);
+        $domainParts = array_slice($email_arr, -1);
+        $domain = $domainParts[0] ?? '';
 
-            // Check if the domain has an IP address assigned to it
-            if (filter_var($domain, FILTER_VALIDATE_IP)) {
-                $mx_ip = $domain;
-            } else {
-                // If no IP assigned, get the MX records for the host name
-                getmxrr($domain, $mxhosts, $mxweight);
-            }
-            if (!empty($mxhosts)) {
-                $lowestWeightIndex = array_search(min($mxweight), $mxweight);
-                $mx_ip = $mxhosts[$lowestWeightIndex];
-            } else {
-                // If MX records not found, get the A DNS records for the host
-                $record_a = array();
-                if (filter_var($domain, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
-                    $record_a = dns_get_record($domain, DNS_A);
-                    // else get the AAAA IPv6 address record
-                } elseif (filter_var($domain, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
-                    $record_a = dns_get_record($domain, DNS_AAAA);
-                } else {
-                    $record_a = dns_get_record($domain, DNS_A + DNS_AAAA);
-                }
-                if (!empty($record_a)) {
-                    $mx_ip = isset($record_a[0]['ip']) ? $record_a[0]['ip'] : $record_a[0]['ipv6'];
-                } else {
-                    // Exit the program if no MX records are found for the domain host
-                    $result = 'invalid';
-                    $details = 'No suitable MX records found.';
-                    return array($result, $details);
-                }
-            }
-            // Open a socket connection with the hostname, smtp port 25
-            try {
-                if ($connect = @fsockopen($mx_ip, 25, $errno, $errstr, 5)) {
-                    // Initiate the Mail Sending SMTP transaction
-                    if (preg_match('/^220/i', $out = fgets($connect, 1024))) {
-                        // Send the HELO command to the SMTP server
-                        fputs($connect, "HELO $mx_ip\r\n");
-                        $out = fgets($connect, 1024);
-                        $detailsDesc .= $out . "\n";
-                        // Send an SMTP Mail command from the sender's email address
-                        fputs($connect, "MAIL FROM: <" . $this->email_from . ">\r\n");
-                        $from = fgets($connect, 1024);
-                        $detailsDesc .= $from . "\n";
-                        // Send the SCPT command with the recepient's email address
-                        fputs($connect, "RCPT TO: <$email>\r\n");
-                        $to = fgets($connect, 1024);
-                        $detailsDesc .= $to . "\n";
-                        // Close the socket connection with QUIT command to the SMTP server
-                        fputs($connect, 'QUIT');
-                        fclose($connect);
-                        // The expected response is 250 if the email is valid
-                        if (!preg_match('/^250/i', $from) || !preg_match('/^250/i', $to)) {
-                            $result = 'invalid';
-                            $details = 'Invalid email address';
-                        } else {
-                            $result = 'valid';
-                            $details = 'Valid email address';
-                        }
-                    } else {
-                        $result = 'invalid';
-                        $details = 'MX record found but SMTP handshake failed';
-                    }
-                } else {
-                    $result = 'invalid';
-                    $details = 'MX record found but could not connect to server';
-                }
-            } catch (\Exception $e) {
-                $result = 'invalid';
-                $details = 'MX record found but could not connect to server';
-            }
-            return array($result, $details);
+        $domain = ltrim($domain, '[');
+        $domain = rtrim($domain, ']');
+        if ('IPv6:' === substr($domain, 0, strlen('IPv6:'))) {
+            $domain = substr($domain, strlen('IPv6') + 1);
+        }
+
+        $mxhosts = [];
+        $mxweight = [];
+        $mxIp = '';
+
+        if (filter_var($domain, FILTER_VALIDATE_IP)) {
+            $mxIp = $domain;
         } else {
-            $result = 'invalid';
-            $details = 'Validation error email address.';
-            return array($result, $details);
+            getmxrr($domain, $mxhosts, $mxweight);
+        }
+
+        if (!empty($mxhosts)) {
+            $lowestWeightIndex = array_search(min($mxweight), $mxweight, true);
+            $mxIp = (string) $mxhosts[(int) $lowestWeightIndex];
+        } else {
+            $recordA = [];
+            if (filter_var($domain, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+                $recordA = dns_get_record($domain, DNS_A);
+            } elseif (filter_var($domain, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+                $recordA = dns_get_record($domain, DNS_AAAA);
+            } else {
+                $recordA = dns_get_record($domain, DNS_A + DNS_AAAA);
+            }
+
+            if (!empty($recordA)) {
+                $mxIp = isset($recordA[0]['ip']) ? (string) $recordA[0]['ip'] : (string) $recordA[0]['ipv6'];
+            } else {
+                return [self::STATUS_INVALID, 'No suitable MX records found.'];
+            }
+        }
+
+        if (!$this->smtpProbeEnabled) {
+            return [self::STATUS_VALID, 'MX/DNS records found (SMTP probe skipped).'];
+        }
+
+        try {
+            $connect = @fsockopen($mxIp, $this->smtpPort, $errno, $errstr, $this->smtpTimeoutSeconds);
+            if ($connect === false) {
+                return [self::STATUS_INVALID, 'MX record found but could not connect to server'];
+            }
+
+            $greeting = fgets($connect, 1024);
+            if (!is_string($greeting) || !preg_match('/^220/i', $greeting)) {
+                fputs($connect, 'QUIT');
+                fclose($connect);
+
+                return [self::STATUS_INVALID, 'MX record found but SMTP handshake failed'];
+            }
+
+            fputs($connect, "HELO $mxIp\r\n");
+            fgets($connect, 1024);
+
+            fputs($connect, 'MAIL FROM: <' . $this->email_from . ">\r\n");
+            $from = fgets($connect, 1024);
+
+            fputs($connect, "RCPT TO: <$email>\r\n");
+            $to = fgets($connect, 1024);
+
+            fputs($connect, 'QUIT');
+            fclose($connect);
+
+            if (!is_string($from) || !is_string($to) || !preg_match('/^250/i', $from) || !preg_match('/^250/i', $to)) {
+                return [self::STATUS_INVALID, 'Invalid email address'];
+            }
+
+            return [self::STATUS_VALID, 'Valid email address'];
+        } catch (\Throwable $e) {
+            return [self::STATUS_INVALID, 'MX record found but could not connect to server'];
         }
     }
 
@@ -256,24 +307,18 @@ class EmailChecker
     @return true | false
      */
 
-    public function checkDomain($email)
+    public function checkDomain(string $email): bool
     {
-        if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $domain = $this->splitEmail($email);
-
-            if (
-                checkdnsrr($domain, 'MX') ||
-                checkdnsrr($domain, 'A') ||
-                checkdnsrr($domain, 'AAAA') ||
-                checkdnsrr($domain, 'CNAME')
-            ) {
-                return true;
-            } else {
-                return false;
-            }
-        } else {
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return false;
         }
+
+        $domain = $this->splitEmail($email);
+
+        return checkdnsrr($domain, 'MX') ||
+            checkdnsrr($domain, 'A') ||
+            checkdnsrr($domain, 'AAAA') ||
+            checkdnsrr($domain, 'CNAME');
     }
 
     /*
@@ -285,22 +330,39 @@ class EmailChecker
 
     @return domain
      */
-    private function splitEmail($email)
+    private function splitEmail(string $email): string
     {
-        $domain = substr(strrchr($email, "@"), 1);
+        $domain = (string) substr((string) strrchr($email, '@'), 1);
         $this->domain = $domain;
         $this->domian = $domain;
 
         return $domain;
     }
 
-    private function buildSuccessPayload($disposable, $mxrecord, $domain)
+    /**
+     * @param array<string, mixed> $disposable
+     * @param array<string, mixed> $mxrecord
+     * @param array<string, mixed> $domain
+     * @return array<string, mixed>
+     */
+    private function buildSuccessPayload(array $disposable, array $mxrecord, array $domain): array
     {
         return [
             self::RESPONSE_KEY_DISPOSABLE => $disposable,
             self::RESPONSE_KEY_DISPOSSABLE_LEGACY => $disposable,
             'mxrecord' => $mxrecord,
             'domain' => $domain,
+        ];
+    }
+
+    /**
+     * @return array{success: false, error: string}
+     */
+    private function failureResponse(string $message): array
+    {
+        return [
+            'success' => false,
+            'error' => $message,
         ];
     }
 

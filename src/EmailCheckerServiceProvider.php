@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Aman\EmailVerifier;
 
 use Illuminate\Support\ServiceProvider;
@@ -11,10 +13,21 @@ class EmailCheckerServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function register()
+    public function register(): void
     {
-        $this->app->bind('emailchecker', function() {
-            return new EmailChecker;
+        $this->mergeConfigFrom(__DIR__ . '/../config/emailchecker.php', 'emailchecker');
+
+        $this->app->singleton('emailchecker', function ($app) {
+            $config = $app['config']->get('emailchecker', []);
+            $settings = is_array($config) ? $config : [];
+
+            $checker = new EmailChecker();
+            $checker->setSmtpProbeEnabled((bool) ($settings['smtp_probe'] ?? true));
+            $checker->setSmtpPort((int) ($settings['smtp_port'] ?? 25));
+            $checker->setSmtpTimeoutSeconds((int) ($settings['smtp_timeout_seconds'] ?? 5));
+            $checker->setFromEmail(is_string($settings['from_email'] ?? null) ? $settings['from_email'] : '');
+
+            return $checker;
         });
     }
 
@@ -23,17 +36,17 @@ class EmailCheckerServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function boot()
+    public function boot(): void
     {
-
+        $this->publishes([
+            __DIR__ . '/../config/emailchecker.php' => config_path('emailchecker.php'),
+        ], 'emailchecker-config');
     }
 
-     /**
-     * Get the services provided by the provider.
-     *
-     * @return array
+    /**
+     * @return array<int, string>
      */
-    public function provides()
+    public function provides(): array
     {
         return ['emailchecker'];
     }

@@ -1,5 +1,26 @@
 # CHANGELOG
 
+## 3.1.0
+✋ Hello,
+
+This release sharpens the package with better configuration support, stronger typing, and faster CI feedback while keeping compatibility smooth for existing users.
+
+🍔 Some Yummy Updates 🍔
+
+- Added publishable package config via `php artisan vendor:publish --tag=emailchecker-config`.
+- Added `config/emailchecker.php` with global defaults for SMTP probe toggle, port, timeout, and sender email.
+- Wired service container binding to apply config defaults automatically when resolving `emailchecker`.
+- Added runtime SMTP controls in `EmailChecker` (`setSmtpProbeEnabled`, `setSmtpPort`, `setSmtpTimeoutSeconds`) with getters.
+- Added strict typing and improved method/property signatures across core classes and tests.
+- Improved helper/shard loading robustness for static analysis and safer file handling.
+- Added and validated new quality tooling: PHPStan and PHP-CS-Fixer.
+- Added CI quality gates for static analysis and coding style checks.
+- Optimized CI runtime by using lockfile-based installs and reducing redundant heavy checks across matrix entries.
+- Expanded test coverage, including container-config default behavior and SMTP configuration paths.
+- Expanded README with configuration publishing, environment variables, and guidance for global vs per-instance overrides.
+
+😄 Happy Coding 😄
+
 ## 3.0.0
 ✋ Hello,
 

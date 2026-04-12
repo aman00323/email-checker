@@ -1,15 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Aman\EmailVerifier\Helpers;
 
 class Helper
 {
-    public const directory = __DIR__ . "/../../resources/domains/";
+    public const directory = __DIR__ . '/../../resources/domains/';
 
     /** @var array<string, array<string, bool>> */
-    private static $shardCache = array();
+    private static $shardCache = [];
 
-    public static function deepCheck(String $domain)
+    public static function deepCheck(string $domain): bool
     {
         $normalizedDomain = self::normalizeDomain($domain);
         if ($normalizedDomain === '') {
@@ -17,7 +19,7 @@ class Helper
         }
 
         $parts = explode('.', $normalizedDomain);
-        $candidates = array();
+        $candidates = [];
 
         for ($i = 0; $i < count($parts); $i++) {
             $candidate = implode('.', array_slice($parts, $i));
@@ -42,7 +44,7 @@ class Helper
         return false;
     }
 
-    private static function normalizeDomain($domain)
+    private static function normalizeDomain(string $domain): string
     {
         $normalizedDomain = strtolower(trim($domain));
 
@@ -61,7 +63,7 @@ class Helper
     /**
      * @return array<string, bool>
      */
-    private static function loadShardAsSet($shardKey)
+    private static function loadShardAsSet(string $shardKey): array
     {
         if (isset(self::$shardCache[$shardKey])) {
             return self::$shardCache[$shardKey];
@@ -69,17 +71,23 @@ class Helper
 
         $path = self::directory . $shardKey . '.json';
         if (!is_file($path)) {
-            self::$shardCache[$shardKey] = array();
+            self::$shardCache[$shardKey] = [];
             return self::$shardCache[$shardKey];
         }
 
-        $decoded = json_decode(file_get_contents($path), true);
+        $raw = file_get_contents($path);
+        if ($raw === false) {
+            self::$shardCache[$shardKey] = [];
+            return self::$shardCache[$shardKey];
+        }
+
+        $decoded = json_decode($raw, true);
         if (!is_array($decoded)) {
-            self::$shardCache[$shardKey] = array();
+            self::$shardCache[$shardKey] = [];
             return self::$shardCache[$shardKey];
         }
 
-        $domainSet = array();
+        $domainSet = [];
         foreach ($decoded as $item) {
             if (is_string($item)) {
                 $domainSet[strtolower($item)] = true;

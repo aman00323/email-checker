@@ -45,10 +45,15 @@
         }
     },
     "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.74",
+        "phpstan/phpstan": "^1.12",
         "phpunit/phpunit": "^10.5|^11.5",
         "orchestra/testbench": "^8.0|^9.0|^10.0"
     },
     "scripts": {
+        "analyse": "vendor/bin/phpstan analyse --memory-limit=1G",
+        "lint": "vendor/bin/php-cs-fixer fix --dry-run --diff --allow-risky=yes",
+        "test": "vendor/bin/phpunit",
         "update-disposable-domains": "php scripts/update-disposable-domains.php"
     }
 }
