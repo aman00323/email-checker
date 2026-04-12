@@ -4,6 +4,7 @@
 ![GitHub release](https://img.shields.io/github/v/tag/aman00323/email-checker)
 ![Packagist Downloads](https://img.shields.io/packagist/dt/aman00323/emailchecker)
 ![PHP Version](https://img.shields.io/packagist/php-v/aman00323/emailchecker)
+[![codecov](https://codecov.io/gh/aman00323/email-checker/graph/badge.svg)](https://codecov.io/gh/aman00323/email-checker)
 
 Email Checker helps you reduce fake signups and disposable email usage by validating addresses with a practical multi-step flow.
 
