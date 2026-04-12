@@ -83,3 +83,43 @@ jobs:
 
       - name: Run coding style checks
         run: ./vendor/bin/php-cs-fixer fix --dry-run --diff --allow-risky=yes
+
+  coverage:
+    name: Coverage (PHP 8.4)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: tests
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: curl
+          coverage: pcov
+          tools: composer:v2
+          ini-values: memory_limit=-1
+
+      - name: Cache Composer downloads
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache/files
+          key: ${{ runner.os }}-php-8.4-composer-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php-8.4-composer-
+            ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Run tests with coverage
+        run: ./vendor/bin/phpunit --coverage-text --coverage-clover=coverage.xml
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
+          retention-days: 7
