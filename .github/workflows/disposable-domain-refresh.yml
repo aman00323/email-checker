@@ -34,7 +34,7 @@ jobs:
         run: ./vendor/bin/phpunit tests/HelperTest.php
 
       - name: Create pull request
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           commit-message: 'chore(data): refresh disposable domain list'
           title: 'chore(data): refresh disposable domain list'
