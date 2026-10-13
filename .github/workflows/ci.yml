@@ -118,7 +118,7 @@ jobs:
         run: ./vendor/bin/phpunit --coverage-text --coverage-clover=coverage.xml
 
       - name: Upload coverage report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-report
           path: coverage.xml
